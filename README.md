@@ -14,7 +14,6 @@ A single-file, offline web app that converts a satellite’s Two-Line Element se
 ## Live Demo & Screenshot
 
 **➡️ [Launch the Live Application Here](https://henkielp.github.io/tle-to-orbital-elements/)**  
-*(Note: This link will be active after you publish via GitHub Pages)*
 
 ![App screenshot showing TLE input on the left and two result tables (“Epoch Elements” and “Current Elements”) on the right, including a (km), e, i (deg), RAAN (Ω deg), ω (deg), ν (deg), M (deg), and T (min).](docs/screenshot.JPG)
 
