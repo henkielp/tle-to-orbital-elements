@@ -25,22 +25,33 @@
     html,body { height:100%; margin:0; background:linear-gradient(180deg,#071023, #011018 60%); }
     .wrap { max-width:980px; margin:28px auto; padding:18px; }
     header { display:flex; align-items:center; gap:14px; margin-bottom:18px; }
-    h1 { font-size:20px; margin:0; }
-    p.lead { margin:0; color:var(--muted); font-size:13px; }
+    h1 { font-size:24px; margin:0; }               /* was 20px */
+    p.lead { margin:0; color:var(--muted); font-size:15px; } /* was 13px */
     .app { display:grid; grid-template-columns: 1fr; gap:16px; align-items:start; }
     .card { background:var(--card); border-radius:12px; padding:14px; box-shadow:0 6px 18px rgba(2,6,23,0.6); }
-    textarea { width:100%; height:170px; background:var(--glass); color:var(--accent); border-radius:8px; border:1px solid rgba(255,255,255,0.03); padding:12px; font-family:monospace; font-size:13px; resize:vertical; }
-    button { display:inline-flex; align-items:center; gap:8px; background:linear-gradient(180deg,#0369a1,#075985); border:none; color:white; padding:10px 14px; border-radius:9px; cursor:pointer; font-weight:600;}
+    textarea {
+      width:100%;
+      height:auto; /* rows controls visual height */
+      background:var(--glass); color:var(--accent);
+      border-radius:8px; border:1px solid rgba(255,255,255,0.03);
+      padding:12px; font-family:monospace; font-size:15px; resize:vertical; /* was 13px */
+    }
+    button {
+      display:inline-flex; align-items:center; gap:8px;
+      background:linear-gradient(180deg,#0369a1,#075985);
+      border:none; color:white; padding:10px 14px; border-radius:9px; cursor:pointer; font-weight:600;
+      font-size:15px; /* added */
+    }
     button:active { transform:translateY(1px); }
-    .muted { color:var(--muted); font-size:13px; }
-    .status { margin-top:10px; font-size:13px; color:var(--muted); min-height:22px; }
+    .muted { color:var(--muted); font-size:15px; } /* was 13px */
+    .status { margin-top:10px; font-size:15px; color:var(--muted); min-height:22px; } /* was 13px */
     .tables { margin-top:14px; display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-    table { width:100%; border-collapse:collapse; font-size:13px; color:#dbeafe; }
-    th,td { padding:8px 6px; text-align:left; border-bottom:1px dashed rgba(255,255,255,0.03); vertical-align:top; }
-    th { color:var(--muted); font-weight:600; font-size:12px; width:56%; }
+    table { width:100%; border-collapse:collapse; font-size:15px; color:#dbeafe; } /* was 13px */
+    th,td { padding:10px 8px; text-align:left; border-bottom:1px dashed rgba(255,255,255,0.03); vertical-align:top; }
+    th { color:var(--muted); font-weight:600; font-size:14px; width:56%; } /* was 12px */
     td.val { font-family:monospace; color:#e6f6ff; }
-    .small { font-size:12px; color:var(--muted); }
-    .section-title { margin:0 0 8px 0; font-size:14px; }
+    .small { font-size:14px; color:var(--muted); } /* was 12px */
+    .section-title { margin:0 0 8px 0; font-size:16px; } /* was 14px */
     @media (max-width:1000px) { .tables { grid-template-columns: 1fr; } }
 	/* --- Footer Styles --- */
 footer {
@@ -64,7 +75,7 @@ footer {
     <div class="app">
       <div class="card">
         <label class="small">Two-Line Element set (TLE)</label>
-        <textarea id="tleInput" spellcheck="false" aria-label="TLE input">
+        <textarea id="tleInput" rows="4" spellcheck="false" aria-label="TLE input">
 1 25544U 98067A   25303.19892820  .00018950  00000-0  34377-3 0  9992
 2 25544  51.6344 358.0397 0004876 356.3572   3.7380 15.49612377536107
         </textarea>
@@ -77,13 +88,13 @@ footer {
         <div id="status" class="status"></div>
 
         <div class="tables">
-          <div class="card" style="padding:10px;">
+          <div class="card" style="padding:12px;">
             <h3 class="section-title">Epoch Elements</h3>
             <div id="epochMeta" class="small muted" style="margin-bottom:6px;"></div>
             <table id="epochTable" aria-live="polite"><tbody></tbody></table>
           </div>
 
-          <div class="card" style="padding:10px;">
+          <div class="card" style="padding:12px;">
             <h3 class="section-title">Current Elements</h3>
             <div id="currentMeta" class="small muted" style="margin-bottom:6px;"></div>
             <table id="currentTable" aria-live="polite"><tbody></tbody></table>
@@ -123,15 +134,31 @@ footer {
       btn: document.getElementById('calcBtn')
     };
 
+    // Enforce a maximum of 4 lines in the TLE textarea
+    els.input.addEventListener('input', () => {
+      const lines = els.input.value.split(/\r?\n/);
+      if (lines.length > 4) {
+        els.input.value = lines.slice(0, 4).join('\n');
+      }
+    });
+
     function row(label, value) {
       return `<tr><th>${label}</th><td class="val">${value}</td></tr>`;
     }
 
     function toFixedFlexible(x, digits) {
-      // If x is already a string (e.g., eccentricity we want flexible), return as-is
       if (typeof x === 'string') return x;
-      // Otherwise format to a fixed number of decimals
+      if (!Number.isFinite(x)) return '';
       return x.toFixed(digits);
+    }
+
+    function formatEccentricityFlexible(e) {
+      if (typeof e === 'string') return e; // already as TLE digits
+      const val = Number(e);
+      if (!isFinite(val)) return '';
+      let out = val.toFixed(10);
+      out = out.replace(/\.?0+$/, '');
+      return out;
     }
 
     function formatEpochTable(ep) {
@@ -141,7 +168,7 @@ footer {
         row('Inclination (i deg)', toFixedFlexible(ep.i_deg, 3)) +
         row('RAAN (Ω deg)', toFixedFlexible(ep.raan_deg, 3)) +
         row('Arg. of Perigee (ω deg)', toFixedFlexible(ep.argp_deg, 3)) +
-        row('True Anomaly (ν deg)', toFixedFlexible(ep.nu_deg, 3)) + // at epoch, ν is not in TLE; we omit or show from M as N/A
+        row('True Anomaly (ν deg)', ep.nu_deg === '' ? '' : toFixedFlexible(ep.nu_deg, 3)) +
         row('Mean Anomaly (M deg)', toFixedFlexible(ep.M_deg, 3)) +
         row('Period (T min)', toFixedFlexible(ep.T_min, 3))
       );
@@ -150,7 +177,7 @@ footer {
     function formatCurrentTable(cur) {
       return (
         row('Semi-major axis (a km)', toFixedFlexible(cur.a_km, 1)) +
-        row('Eccentricity (e)', cur.e_str) +
+        row('Eccentricity (e)', formatEccentricityFlexible(cur.e)) +
         row('Inclination (i deg)', toFixedFlexible(cur.i_deg, 3)) +
         row('RAAN (Ω deg)', toFixedFlexible(cur.raan_deg, 3)) +
         row('Arg. of Perigee (ω deg)', toFixedFlexible(cur.argp_deg, 3)) +
@@ -160,55 +187,48 @@ footer {
       );
     }
 
-    // --- Robust TLE field parsing (fixed column positions, with fallbacks) ---
+    // --- Robust TLE field parsing (fixed columns) ---
     function parseTLEFields(line1, line2) {
       const l1 = line1.padEnd(69, ' ');
       const l2 = line2.padEnd(69, ' ');
 
-      // Primary: fixed columns (per Celestrak format)
       const i_deg = parseFloat(l2.substring(8, 16));
       const raan_deg = parseFloat(l2.substring(17, 25));
-      const e_str = l2.substring(26, 33).trim();
-      const e = parseFloat('0.' + e_str);
+      const e_str_digits = l2.substring(26, 33).trim(); // 7 digits, no decimal
+      const e = parseFloat('0.' + e_str_digits);
       const argp_deg = parseFloat(l2.substring(34, 42));
       const M_deg = parseFloat(l2.substring(43, 51));
       const n_rev_per_day = parseFloat(l2.substring(52, 63));
-      // orbit number lives on line 1 cols 63–68 (not strictly needed here)
       const orbitNumStr = l1.substring(63, 68).trim();
       const orbit_number = orbitNumStr ? parseInt(orbitNumStr, 10) : null;
 
-      // Epoch from line 1: yy + day-of-year.ddddd
+      // Epoch parts from line 1 (we ultimately get Date from satrec)
       const epochYr = parseInt(l1.substring(18, 20), 10);
       const epochDays = parseFloat(l1.substring(20, 32));
       const fullYear = epochYr < 57 ? 2000 + epochYr : 1900 + epochYr;
 
-      return { i_deg, raan_deg, e, e_str, argp_deg, M_deg, n_rev_per_day, orbit_number, epochYr, epochDays, fullYear };
+      return { i_deg, raan_deg, e, e_str_digits, argp_deg, M_deg, n_rev_per_day, orbit_number, epochYr, epochDays, fullYear };
     }
 
-    // Convert epoch (year, day-of-year) to Date using satellite.js JDN helpers via satrec if available
     function epochToUTCDate(satrec) {
-      // satrec.jdsatepoch is the Julian date of the epoch
       const dt = satellite.invjday(satrec.jdsatepoch);
-      // satellite.invjday may return a Date already; if array, construct Date
       if (dt instanceof Date) return dt;
-      // If the lib returns [year, month, day, hour, minute, second]
       if (Array.isArray(dt)) {
         const [y, mo, d, h, mi, s] = dt;
-        return new Date(Date.UTC(y, mo - 1, d, h, mi, s));
+        return new Date(Date.UTC(y, mo - 1, d, h, mi, Math.floor(s)));
       }
-      // Fallback: assume Date.now (should not happen)
       return new Date();
     }
 
     // From mean motion (rev/day) → a(km), T(min)
     function aAndPeriodFromMeanMotion(n_rev_per_day) {
-      const n_rad_s = n_rev_per_day * 2 * Math.PI / 86400.0;
-      const a_km = Math.cbrt(mu) / Math.cbrt(n_rad_s * n_rad_s); // a = (mu)^(1/3) / (n^(2/3))
       const T_min = 1440.0 / n_rev_per_day;
+      const n_rad_s = n_rev_per_day * 2 * Math.PI / 86400.0;
+      const a_km = Math.cbrt(mu) / Math.cbrt(n_rad_s * n_rad_s);
       return { a_km, T_min };
     }
 
-    // Compute classical elements from state vector (r[km], v[km/s])
+    // Classical elements from state vector (r[km], v[km/s])
     function elementsFromState(r, v) {
       const rmag = Math.hypot(r.x, r.y, r.z);
       const vmag = Math.hypot(v.x, v.y, v.z);
@@ -223,9 +243,7 @@ footer {
       const i = Math.acos(hz / hmag);
 
       // node vector
-      const nx = -hy;
-      const ny = hx;
-      const nz = 0;
+      const nx = -hy, ny = hx, nz = 0;
       const nmag = Math.hypot(nx, ny);
 
       // eccentricity vector
@@ -240,7 +258,7 @@ footer {
       // RAAN
       let raan = 0.0;
       if (nmag > 1e-12) {
-        raan = Math.acos(nx / nmag);
+        raan = Math.acos(Math.min(1, Math.max(-1, nx / nmag)));
         if (ny < 0) raan = 2 * Math.PI - raan;
       }
 
@@ -263,16 +281,12 @@ footer {
       // Semi-major axis
       const a = 1 / (2 / rmag - (vmag * vmag) / mu);
 
-      // Eccentric anomaly (elliptic)
-      let E = 0.0;
-      if (e < 1) {
-        const tanE2 = Math.tan(nu / 2) * Math.sqrt((1 - e) / (1 + e));
-        E = 2 * Math.atan(tanE2);
-        if (E < 0) E += 2 * Math.PI;
-      }
-      // Mean anomaly
+      // Eccentric anomaly & mean anomaly (elliptic)
       let M = 0.0;
       if (e < 1) {
+        const tanE2 = Math.tan(nu / 2) * Math.sqrt((1 - e) / (1 + e));
+        let E = 2 * Math.atan(tanE2);
+        if (E < 0) E += 2 * Math.PI;
         M = E - e * Math.sin(E);
         if (M < 0) M += 2 * Math.PI;
       }
@@ -291,18 +305,6 @@ footer {
       };
     }
 
-    function formatEccentricityFlexible(e) {
-      // Keep significant digits without forcing trailing zeros; cap to ~10-12 decimals to avoid noise
-      if (typeof e === 'string') return e; // already formatted from TLE
-      const s = e.toString();
-      // If default string is scientific or too long, format with up to 10 decimals then trim
-      const val = Number(e);
-      if (!isFinite(val)) return s;
-      let out = val.toFixed(10);
-      out = out.replace(/\.?0+$/, ''); // strip trailing zeros
-      return out;
-    }
-
     els.btn.addEventListener('click', () => {
       els.status.textContent = '';
       els.epochTbody.innerHTML = '';
@@ -319,62 +321,38 @@ footer {
       const line2 = lines[1].trim();
 
       try {
-        // Build satrec for epoch time & propagation
+        // Build satrec for epoch & propagation
         const satrec = satellite.twoline2satrec(line1, line2);
 
-        // ---- EPOCH (from TLE fields directly) ----
+        // ---- EPOCH (direct from TLE) ----
         const f = parseTLEFields(line1, line2);
-
-        // Epoch UTC from satrec
         const epochDate = epochToUTCDate(satrec);
-        // Mean motion → a, T
         const { a_km, T_min } = aAndPeriodFromMeanMotion(f.n_rev_per_day);
 
-        // Epoch elements (use TLE angles/values directly)
         const epoch = {
           a_km: a_km,
-          e_str: formatEccentricityFlexible(f.e), // flexible
+          e_str: formatEccentricityFlexible(f.e), // flexible precision
           i_deg: f.i_deg,
           raan_deg: f.raan_deg,
           argp_deg: f.argp_deg,
-          // ν at epoch is not *in* the TLE; we leave it computed as N/A (or derive from E if needed).
-          // For consistency with your table, we keep a ν row and set it from mean anomaly (not physically identical),
-          // but better to show N/A. We'll compute from M & e if desired; here we leave N/A as 3-decimal  placeholder:
-          nu_deg: NaN,
+          nu_deg: '', // TLE does not include ν at epoch; leave blank
           M_deg: f.M_deg,
           T_min
         };
 
-        // Show Epoch meta
-        els.epochMeta.textContent =
-          `Epoch (UTC): ${epochDate.toUTCString().replace('GMT','UTC')}`;
+        els.epochMeta.textContent = `Epoch (UTC): ${epochDate.toUTCString().replace('GMT','UTC')}`;
+        els.epochTbody.innerHTML = formatEpochTable(epoch);
 
-        // Render Epoch table (ν line will show as blank if NaN)
-        els.epochTbody.innerHTML = formatEpochTable({
-          ...epoch,
-          e_str: formatEccentricityFlexible(f.e),
-          nu_deg: Number.isFinite(epoch.nu_deg) ? epoch.nu_deg : ''
-        });
-
-        // ---- CURRENT (propagate to "now", then compute osculating-style elements from r,v) ----
+        // ---- CURRENT (propagate to now → r,v → elements) ----
         const now = new Date();
         const pvNow = satellite.propagate(satrec, now);
         if (!pvNow.position || !pvNow.velocity) {
           throw new Error('Propagation failed (no state vector).');
         }
         const cur = elementsFromState(pvNow.position, pvNow.velocity);
-        els.currentMeta.textContent = `Now (UTC): ${now.toUTCString().replace('GMT','UTC')}`;
 
-        els.currentTbody.innerHTML = formatCurrentTable({
-          a_km: cur.a_km,
-          e_str: formatEccentricityFlexible(cur.e),
-          i_deg: cur.i_deg,
-          raan_deg: cur.raan_deg,
-          argp_deg: cur.argp_deg,
-          nu_deg: cur.nu_deg,
-          M_deg: cur.M_deg,
-          T_min: cur.T_min
-        });
+        els.currentMeta.textContent = `Now (UTC): ${now.toUTCString().replace('GMT','UTC')}`;
+        els.currentTbody.innerHTML = formatCurrentTable(cur);
 
         els.status.textContent = 'Calculation successful.';
       } catch (err) {
@@ -383,7 +361,7 @@ footer {
     });
   })();
   </script>
-  <footer>
+    <footer>
   <p>Copyright &copy; 2025 Paul Henkiel. All rights reserved. Licensed under the MIT License.</p>
 </footer>
 </body>
